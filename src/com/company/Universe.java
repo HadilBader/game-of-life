@@ -8,33 +8,23 @@ public class Universe
     private int alive;
     private boolean[][] currentGeneration;
     private boolean[][] nextGeneration;
-    private Random random;
-
 
     public Universe(int height, int width, int seed, String pattern)
     {
-       this.currentGeneration = new boolean[height][width];
-       if (pattern.equalsIgnoreCase("Random"))
-       {
-           random = new Random(seed);
-           for (int i = 0; i < height; i++) {
-               for (int j = 0; j < width; j++) {
-                   currentGeneration[i][j] = random.nextBoolean();
-               }
-           }
-       }
-       else if (pattern.equalsIgnoreCase("glider"))
-       {
-           getGlider(currentGeneration);
-       }
-        nextGeneration = generateNextGeneration(currentGeneration);
+        this.currentGeneration = new boolean[height][width];
+        if (pattern.equalsIgnoreCase("Random"))
+        {
+            randomize(currentGeneration, seed);
+        }
+        else if (pattern.equalsIgnoreCase("glider"))
+        {
+            gliderize(currentGeneration);
+        }
+        // to add more patterns
+        nextGeneration = generateNextGeneration();
         generation = 1;
-        alive = calculateAlive(currentGeneration);
+        alive = calculateAlive();
     }
-
-
-
-    //Getters and instance methods
 
     int getGeneration()
     {
@@ -54,118 +44,95 @@ public class Universe
     }
     void moveToNextState()
     {
-        boolean[][] temp = generateNextGeneration(nextGeneration);
+        boolean[][] temp = generateNextGeneration();
         currentGeneration = nextGeneration;
         nextGeneration = temp;
-        alive = calculateAlive(currentGeneration);
+        alive = calculateAlive();
         generation++;
     }
-    void reset(int h, int w, int seed)
+    void reset(int height, int width, int seed, String pattern)
     {
-        this.currentGeneration = new boolean[h][w];
-        random = new Random(seed);
-        for (int i = 0; i < h; i++)
+        this.currentGeneration = new boolean[height][width];
+        if (pattern.equals("random"))
         {
-            for (int j = 0; j < w; j++)
-            {
-                this.currentGeneration[i][j] = random.nextBoolean();
-            }
+            randomize(currentGeneration, seed);
         }
-        nextGeneration = generateNextGeneration(currentGeneration);
+        // to add more cases
+        nextGeneration = generateNextGeneration();
         generation = 1;
-        alive = calculateAlive(currentGeneration);
+        alive = calculateAlive();
     }
-
-    //Utility methods
-
-    static int calculateNeighbours(boolean[][] grid, int row, int column)
+    
+    int calculateNeighbours(int x, int y)
     {
-        int neighbours = 0, r, c;
-        int N = grid.length;
-        int M = grid[0].length;
+        int neighbours = 0, row, column;
+        int height = currentGeneration.length;
+        int width = currentGeneration[0].length;
 
-        for (int p = -1; p <= 1; p++)
+        for (int i = -1; i <= 1; i++)
         {
-            for (int m = -1; m <= 1; m++)
+            for (int j = -1; j <= 1; j++)
             {
-                r = row + p;
-                c = column + m;
+                row = x + i;
+                column = y + j;
 
-                if (r < 0)
-                    r = N - 1;
-                if (r > N - 1)
-                    r = 0;
-                if (c < 0)
-                    c = M - 1;
-                if (c > M - 1)
-                    c = 0;
+                row = (row + height) % height;
+                column = (column + width) % width;
 
-                if (grid[r][c] && (p != 0 || m != 0))
+                if (currentGeneration[row][column] && (i != 0 || j != 0))
                     neighbours++;
             }
         }
         return neighbours;
     }
 
-    static int calculateAlive(boolean[][] grid)
+    int calculateAlive()
     {
         int alive = 0;
-        for (int i = 0; i < grid.length; i++)
+        for (int x = 0; x < currentGeneration.length; x++)
         {
-            for (int j = 0; j < grid[0].length; j++)
+            for (int y = 0; y < currentGeneration[0].length; y++)
             {
-                if (grid[i][j])
+                if (currentGeneration[x][y])
                     alive++;
             }
         }
         return alive;
     }
 
-    static boolean[][] generateNextGeneration(boolean[][] currentGeneration)
+    boolean[][] generateNextGeneration()
     {
-        int N = currentGeneration.length;
-        int M = currentGeneration[0].length;
-        boolean[][] nextGeneration = new boolean[N][M];
+        boolean[][] nextGeneration = new boolean[currentGeneration.length][currentGeneration[0].length];
         int neighbours;
-        for (int i = 0; i < N; i++)
+        for (int x = 0; x < currentGeneration.length; x++)
         {
-            for (int j = 0; j < M; j++)
+            for (int y = 0; y < currentGeneration[0].length; y++)
             {
-                neighbours = calculateNeighbours(currentGeneration, i, j);
+                neighbours = calculateNeighbours(x, y);
 
-                if (neighbours == 3 || (currentGeneration[i][j] && neighbours == 2))
-                    nextGeneration[i][j] = true;
+                if (neighbours == 3 || (currentGeneration[x][y] && neighbours == 2))
+                    nextGeneration[x][y] = true;
                 else
-                    nextGeneration[i][j] = false;
+                    nextGeneration[x][y] = false;
             }
         }
         return nextGeneration;
     }
 
-    static boolean[][] generateNthGeneration(boolean[][] currentGeneration, int X)
+    boolean[][] generateNthGeneration(int n)
     {
-        if (X == 0)
+        if (n == 0)
             return currentGeneration;
         else
-            return generateNthGeneration(generateNextGeneration(currentGeneration), X - 1);
-    }
-    static void printGeneration(boolean[][] generation)
-    {
-        for (int i = 0; i < generation.length; i++)
-        {
-            for (int j = 0; j < generation[0].length; j++)
-                System.out.print(generation[i][j]? "O" : " ");
-            System.out.println();
-        }
-
+            return generateNthGeneration(n - 1);
     }
 
-    static void getGlider(boolean currentGeneration[][])
+    static void gliderize(boolean currentGeneration[][])
     {
-        for(int i = 0; i < 60; i++)
+        for(int x = 0; x < 60; x++)
         {
-            for (int j =0; j < 90; j++)
-                currentGeneration[i][j] = false;
+            for (int y =0; y < 90; y++)
+                currentGeneration[x][y] = false;
         }
         currentGeneration[1][3] = true;
         currentGeneration[2][3] = true;
@@ -173,4 +140,16 @@ public class Universe
         currentGeneration[2][1] = true;
         currentGeneration[3][2] = true;
     }
+    
+    static void randomize(boolean[][] grid, int seed)
+    {
+        Random random = new Random(seed);
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[0].length; j++) {
+                grid[i][j] = random.nextBoolean();
+            }
+        }
+    }
+
 }
+
