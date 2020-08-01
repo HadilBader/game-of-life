@@ -168,7 +168,7 @@ public class GameOfLife extends JFrame
                 timer.setDelay(speed -= 50);
         });
         slowDownButton.addActionListener(e -> timer.setDelay(speed += 50));
-        resetButton.addActionListener(e -> universe.reset(height, width, (int) Math.random()));
+        resetButton.addActionListener(e -> universe.reset(height, width, (int) Math.random(), "random"));
     }
     public static void main(String[] args)
     {
